@@ -5,6 +5,9 @@ const nextConfig = {
   images: {
     domains: ['saweria.co'],
   },
+  experimental: {
+    appDir: true,
+  },
 }
 
 module.exports = nextConfig

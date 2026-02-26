@@ -3,10 +3,6 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "prisma:generate": "prisma generate",
-    "prisma:migrate": "prisma migrate dev",
-    "prisma:seed": "prisma db seed",
-    "postinstall": "prisma generate",
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
@@ -22,6 +18,7 @@
     "node-fetch": "^3.3.2",
     "nodemailer": "^6.9.7",
     "telegraf": "^4.15.3",
+    "lucide-react": "^0.309.0",
     "sqlite3": "^5.1.6"
   },
   "devDependencies": {
