@@ -20,17 +20,19 @@ export async function POST(request) {
     const decoded = verifyToken(token)
     if (!decoded) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-    const { name, description, price, stock, productType } = await request.json()
+    const body = await request.json()
+    const { name, description, price, stock, productType, fileUrl, fileName, filePublicId, imageUrl } = body
 
     const store = await prisma.store.findFirst({ where: { userId: decoded.id } })
     if (!store) return NextResponse.json({ error: 'Buat toko dulu!' }, { status: 400 })
 
     const product = await prisma.product.create({
-      data: { name, description, price, stock: stock || 999, productType: productType || 'digital', storeId: store.id }
+      data: { name, description, price: parseInt(price), stock: parseInt(stock) || 999, productType: productType || 'digital', storeId: store.id, fileUrl, fileName, filePublicId, imageUrl }
     })
 
     return NextResponse.json({ product }, { status: 201 })
   } catch (error) {
+    console.error(error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
