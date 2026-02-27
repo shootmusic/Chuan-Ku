@@ -1,5 +1,4 @@
 'use client'
-
 import { useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
@@ -14,23 +13,20 @@ export default function LoginPage() {
     e.preventDefault()
     setLoading(true)
     setError('')
-    
     try {
       const res = await fetch('/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(form)
       })
-      
       const data = await res.json()
-      
       if (res.ok) {
         localStorage.setItem('token', data.token)
         router.push('/dashboard/dashboard')
       } else {
         setError(data.error || 'Login gagal')
       }
-    } catch (err) {
+    } catch {
       setError('Terjadi kesalahan')
     } finally {
       setLoading(false)
@@ -39,51 +35,28 @@ export default function LoginPage() {
 
   return (
     <div className="card">
-      <h1 className="text-3xl font-bold text-center mb-8">Login ke Chuàng Kù</h1>
-      
+      <h2 style={{fontSize:'24px', fontWeight:'800', textAlign:'center', marginBottom:'24px', color:'white'}}>Login</h2>
       {error && (
-        <div className="bg-red-500/20 border border-red-500 text-red-200 p-3 rounded-lg mb-4">
+        <div style={{background:'rgba(239,68,68,0.15)', border:'1px solid rgba(239,68,68,0.5)', color:'#fca5a5', padding:'12px', borderRadius:'10px', marginBottom:'16px', fontSize:'14px'}}>
           {error}
         </div>
       )}
-      
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <div>
-          <label className="block text-sm font-medium mb-1">Username</label>
-          <input
-            type="text"
-            value={form.username}
-            onChange={(e) => setForm({...form, username: e.target.value})}
-            className="w-full p-3 rounded-lg bg-white/20 border border-white/30 focus:outline-none focus:border-white"
-            required
-          />
+      <form onSubmit={handleSubmit}>
+        <div style={{marginBottom:'16px'}}>
+          <label style={{display:'block', fontSize:'13px', fontWeight:'600', marginBottom:'6px', color:'rgba(255,255,255,0.8)'}}>Username</label>
+          <input className="input-field" type="text" placeholder="Masukkan username" value={form.username} onChange={(e) => setForm({...form, username: e.target.value})} required />
         </div>
-        
-        <div>
-          <label className="block text-sm font-medium mb-1">Password</label>
-          <input
-            type="password"
-            value={form.password}
-            onChange={(e) => setForm({...form, password: e.target.value})}
-            className="w-full p-3 rounded-lg bg-white/20 border border-white/30 focus:outline-none focus:border-white"
-            required
-          />
+        <div style={{marginBottom:'24px'}}>
+          <label style={{display:'block', fontSize:'13px', fontWeight:'600', marginBottom:'6px', color:'rgba(255,255,255,0.8)'}}>Password</label>
+          <input className="input-field" type="password" placeholder="Masukkan password" value={form.password} onChange={(e) => setForm({...form, password: e.target.value})} required />
         </div>
-        
-        <button
-          type="submit"
-          disabled={loading}
-          className="w-full btn-primary py-3 disabled:opacity-50"
-        >
+        <button type="submit" className="btn-primary" disabled={loading} style={{width:'100%', padding:'13px', fontSize:'15px', opacity: loading ? 0.6 : 1}}>
           {loading ? 'Loading...' : 'Login'}
         </button>
       </form>
-      
-      <p className="text-center mt-4">
+      <p style={{textAlign:'center', marginTop:'20px', fontSize:'14px', color:'rgba(255,255,255,0.6)'}}>
         Belum punya akun?{' '}
-        <Link href="/register" className="text-yellow-300 hover:underline">
-          Daftar
-        </Link>
+        <Link href="/register" style={{color:'#ffd700', fontWeight:'600', textDecoration:'none'}}>Daftar</Link>
       </p>
     </div>
   )

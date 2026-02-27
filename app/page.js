@@ -2,56 +2,44 @@ import Link from 'next/link'
 
 export default function HomePage() {
   return (
-    <div className="min-h-screen">
-      <nav className="flex justify-between items-center px-6 py-4 bg-black/20 backdrop-blur-lg border-b border-white/10">
-        <h1 className="text-2xl font-bold text-white">Chuàng Kù 创库</h1>
-        <div className="flex gap-3">
-          <Link href="/login">
-            <button className="btn-outline text-sm py-2 px-5">Login</button>
-          </Link>
-          <Link href="/register">
-            <button className="btn-primary text-sm py-2 px-5">Daftar</button>
-          </Link>
+    <div style={{minHeight:'100vh', display:'flex', flexDirection:'column'}}>
+      <nav style={{display:'flex', justifyContent:'space-between', alignItems:'center', padding:'16px 24px', background:'rgba(0,0,0,0.2)', backdropFilter:'blur(12px)', borderBottom:'1px solid rgba(255,255,255,0.1)'}}>
+        <h1 style={{fontSize:'22px', fontWeight:'800', color:'white', margin:0}}>Chuàng Kù 创库</h1>
+        <div style={{display:'flex', gap:'12px'}}>
+          <Link href="/login"><button className="btn-outline" style={{padding:'8px 20px', fontSize:'14px'}}>Login</button></Link>
+          <Link href="/register"><button className="btn-primary" style={{padding:'8px 20px', fontSize:'14px'}}>Daftar</button></Link>
         </div>
       </nav>
 
-      <div className="flex flex-col items-center justify-center text-center px-6 py-24">
-        <div className="inline-block bg-yellow-400/20 border border-yellow-400/40 text-yellow-300 text-sm px-4 py-1 rounded-full mb-6">
+      <div style={{flex:1, display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', textAlign:'center', padding:'60px 24px'}}>
+        <span style={{background:'rgba(255,220,0,0.15)', border:'1px solid rgba(255,220,0,0.4)', color:'#ffd700', fontSize:'13px', padding:'6px 16px', borderRadius:'99px', marginBottom:'24px', display:'inline-block'}}>
           Auto Payment via Telegram Bot
-        </div>
-        <h2 className="text-5xl md:text-6xl font-extrabold text-white mb-6 leading-tight">
-          Marketplace Digital<br />
-          <span className="text-yellow-300">Auto Payment</span>
+        </span>
+        <h2 style={{fontSize:'48px', fontWeight:'900', color:'white', lineHeight:'1.1', marginBottom:'20px', maxWidth:'600px'}}>
+          Marketplace Digital<br/>
+          <span style={{color:'#ffd700'}}>Auto Payment</span>
         </h2>
-        <p className="text-lg text-white/70 mb-10 max-w-xl">
+        <p style={{fontSize:'17px', color:'rgba(255,255,255,0.65)', marginBottom:'36px', maxWidth:'480px', lineHeight:'1.6'}}>
           Jual apapun, dapatkan pembayaran otomatis via Telegram. Digital atau fisik, semua bisa!
         </p>
-        <div className="flex flex-wrap gap-4 justify-center">
-          <Link href="/register">
-            <button className="btn-primary text-base px-8 py-3">Mulai Jualan</button>
-          </Link>
-          <Link href="/dashboard/dashboard">
-            <button className="btn-outline text-base px-8 py-3">Lihat Demo</button>
-          </Link>
+        <div style={{display:'flex', gap:'16px', flexWrap:'wrap', justifyContent:'center'}}>
+          <Link href="/register"><button className="btn-primary" style={{padding:'14px 32px', fontSize:'16px'}}>Mulai Jualan</button></Link>
+          <Link href="/dashboard/dashboard"><button className="btn-outline" style={{padding:'14px 32px', fontSize:'16px'}}>Lihat Demo</button></Link>
         </div>
       </div>
 
-      <div className="grid md:grid-cols-3 gap-6 px-6 pb-20 max-w-5xl mx-auto">
-        <div className="card text-center">
-          <div className="text-4xl mb-3">⚡</div>
-          <h3 className="text-xl font-bold mb-2">Auto Payment</h3>
-          <p className="text-white/60 text-sm">QRIS, Gopay, VA, Saweria auto integrate dengan notifikasi Telegram</p>
-        </div>
-        <div className="card text-center">
-          <div className="text-4xl mb-3">🤖</div>
-          <h3 className="text-xl font-bold mb-2">Telegram Notif</h3>
-          <p className="text-white/60 text-sm">Notifikasi realtime + konfirmasi via bot, ga perlu ngecek dashboard</p>
-        </div>
-        <div className="card text-center">
-          <div className="text-4xl mb-3">🏪</div>
-          <h3 className="text-xl font-bold mb-2">Multi Store</h3>
-          <p className="text-white/60 text-sm">Buka toko sendiri dengan payment method masing-masing</p>
-        </div>
+      <div style={{display:'grid', gridTemplateColumns:'repeat(auto-fit, minmax(250px, 1fr))', gap:'20px', padding:'0 24px 60px', maxWidth:'900px', margin:'0 auto', width:'100%'}}>
+        {[
+          {icon:'⚡', title:'Auto Payment', desc:'QRIS, Gopay, VA, Saweria auto integrate dengan notifikasi Telegram'},
+          {icon:'🤖', title:'Telegram Notif', desc:'Notifikasi realtime + konfirmasi via bot, ga perlu ngecek dashboard'},
+          {icon:'🏪', title:'Multi Store', desc:'Buka toko sendiri dengan payment method masing-masing'},
+        ].map((f) => (
+          <div key={f.title} className="card" style={{textAlign:'center'}}>
+            <div style={{fontSize:'36px', marginBottom:'12px'}}>{f.icon}</div>
+            <h3 style={{fontSize:'18px', fontWeight:'700', marginBottom:'8px'}}>{f.title}</h3>
+            <p style={{fontSize:'14px', color:'rgba(255,255,255,0.6)', lineHeight:'1.5'}}>{f.desc}</p>
+          </div>
+        ))}
       </div>
     </div>
   )

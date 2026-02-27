@@ -5,51 +5,40 @@ import { comparePassword, generateToken } from '@/lib/auth'
 export async function POST(request) {
   try {
     const { username, password } = await request.json()
-    
+
     if (!username || !password) {
-      return NextResponse.json(
-        { error: 'Username dan password harus diisi' },
-        { status: 400 }
-      )
+      return NextResponse.json({ error: 'Username dan password harus diisi' }, { status: 400 })
     }
-    
-    const user = await prisma.user.findUnique({
-      where: { username }
-    })
-    
+
+    const user = await prisma.user.findUnique({ where: { username } })
+
     if (!user) {
-      return NextResponse.json(
-        { error: 'Username atau password salah' },
-        { status: 401 }
-      )
+      return NextResponse.json({ error: 'Username atau password salah' }, { status: 401 })
     }
-    
+
     const isValid = await comparePassword(password, user.password)
-    
     if (!isValid) {
-      return NextResponse.json(
-        { error: 'Username atau password salah' },
-        { status: 401 }
-      )
+      return NextResponse.json({ error: 'Username atau password salah' }, { status: 401 })
     }
-    
+
     const token = generateToken(user)
-    
-    return NextResponse.json({
+
+    const response = NextResponse.json({
       message: 'Login berhasil',
       token,
-      user: {
-        id: user.id,
-        username: user.username,
-        email: user.email
-      }
+      user: { id: user.id, username: user.username, email: user.email }
     })
-    
+
+    response.cookies.set('token', token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 60 * 60 * 24 * 7
+    })
+
+    return response
   } catch (error) {
     console.error('Login error:', error)
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    )
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
