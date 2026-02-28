@@ -5,6 +5,8 @@ import { verifyToken } from '@/lib/auth'
 export async function GET(request) {
   try {
     const token = request.headers.get('authorization')?.replace('Bearer ', '')
+    if (!token) return NextResponse.json({ error: 'No token' }, { status: 401 })
+    
     const decoded = verifyToken(token)
     if (!decoded) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
@@ -13,9 +15,10 @@ export async function GET(request) {
       include: { products: { orderBy: { createdAt: 'desc' } } }
     })
 
-    if (!store) return NextResponse.json({ error: 'Store not found' }, { status: 404 })
+    if (!store) return NextResponse.json({ store: null }, { status: 200 })
     return NextResponse.json({ store })
   } catch (error) {
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+    console.error('Store/my error:', error.message)
+    return NextResponse.json({ error: error.message }, { status: 500 })
   }
 }
