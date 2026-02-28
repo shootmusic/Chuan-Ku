@@ -2,7 +2,6 @@ import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 
 const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN
-const OWNER_CHAT_ID = process.env.TELEGRAM_OWNER_CHAT_ID
 
 async function sendTelegram(chatId, text, extra = {}) {
   await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
@@ -31,7 +30,6 @@ async function forwardDocument(chatId, fileId, caption, extra = {}) {
 export async function POST(request) {
   try {
     const body = await request.json()
-    const message = body.message || body.callback_query?.message
 
     // Handle callback (konfirmasi/reject dari penjual)
     if (body.callback_query) {
@@ -42,7 +40,7 @@ export async function POST(request) {
         const action = data.startsWith('confirm_') ? 'confirm' : 'reject'
         const orderNumber = data.replace('confirm_', '').replace('reject_', '')
 
-        const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://chuangku.up.railway.app'
+        const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://chuangku.ricossh.cloud'
         await fetch(`${baseUrl}/api/orders/confirm`, {
           method: 'POST',
           headers: {'Content-Type':'application/json'},
@@ -52,35 +50,58 @@ export async function POST(request) {
         await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/answerCallbackQuery`, {
           method: 'POST',
           headers: {'Content-Type':'application/json'},
-          body: JSON.stringify({ callback_query_id: body.callback_query.id, text: action === 'confirm' ? 'Pesanan dikonfirmasi!' : 'Pesanan ditolak' })
+          body: JSON.stringify({
+            callback_query_id: body.callback_query.id,
+            text: action === 'confirm' ? 'Pesanan dikonfirmasi!' : 'Pesanan ditolak'
+          })
         })
       }
       return NextResponse.json({ ok: true })
     }
 
+    const message = body.message
     if (!message) return NextResponse.json({ ok: true })
 
     const chatId = message.chat.id
     const text = message.text || ''
     const fromUsername = message.from?.username
     const fromId = message.from?.id
+    const fromFirstName = message.from?.first_name || 'Kawan'
 
     // Handle /start
     if (text === '/start') {
+      const usernameText = fromUsername ? `@${fromUsername}` : `ID: ${fromId}`
       await sendTelegram(chatId,
-        `Halo! Selamat datang di <b>Chuàng Kù Bot</b>\n\n` +
-        `Gue akan bantu proses pembayaran dan pengiriman produk kamu.\n\n` +
-        `Untuk melanjutkan pesanan, silakan checkout di:\n` +
-        `<b>chuangku.ricossh.cloud</b>`
+        `Halo, <b>${fromFirstName}</b>! 👋\n\n` +
+        `Selamat datang di <b>Chuàng Kù</b> — Marketplace Digital.\n\n` +
+        `Info akun kamu:\n` +
+        `• Nama: <b>${fromFirstName}</b>\n` +
+        `• Username: <b>${usernameText}</b>\n` +
+        `• Telegram ID: <code>${fromId}</code>\n\n` +
+        `Gunakan ID <code>${fromId}</code> saat checkout untuk menerima produk via Telegram.\n\n` +
+        `Belanja sekarang di:\n<b>chuangku.ricossh.cloud</b>\n\n` +
+        `Jika sudah bayar, kirim screenshot bukti pembayaran ke sini ya!`
+      )
+      return NextResponse.json({ ok: true })
+    }
+
+    // Handle /id - cek ID telegram
+    if (text === '/id') {
+      const usernameText = fromUsername ? `@${fromUsername}` : 'tidak ada'
+      await sendTelegram(chatId,
+        `Info Telegram kamu:\n\n` +
+        `• Nama: <b>${fromFirstName}</b>\n` +
+        `• Username: <b>${usernameText}</b>\n` +
+        `• Telegram ID: <code>${fromId}</code>\n\n` +
+        `Gunakan ID <code>${fromId}</code> saat checkout.`
       )
       return NextResponse.json({ ok: true })
     }
 
     // Handle bukti pembayaran (foto/dokumen)
     if (message.photo || message.document) {
-      // Cari order pending dari user ini berdasarkan telegram username/id
       const buyerTelegram = fromUsername ? `@${fromUsername}` : `${fromId}`
-      
+
       const pendingOrders = await prisma.order.findMany({
         where: {
           status: 'pending',
@@ -96,7 +117,12 @@ export async function POST(request) {
       })
 
       if (pendingOrders.length === 0) {
-        await sendTelegram(chatId, 'Hmm, gue tidak menemukan pesanan pending dari kamu. Pastikan kamu sudah checkout di website dan masukkan username Telegram kamu dengan benar.')
+        await sendTelegram(chatId,
+          `Hmm, gue tidak menemukan pesanan pending dari kamu.\n\n` +
+          `Pastikan kamu sudah checkout di website dan masukkan:\n` +
+          `• Username: <b>${fromUsername ? '@'+fromUsername : '-'}</b>\n` +
+          `• Atau ID: <code>${fromId}</code>`
+        )
         return NextResponse.json({ ok: true })
       }
 
@@ -104,29 +130,29 @@ export async function POST(request) {
       const fileId = message.photo ? message.photo[message.photo.length-1].file_id : message.document?.file_id
       const fileType = message.photo ? 'photo' : 'document'
 
-      // Simpan bukti pembayaran
-      await prisma.order.update({ where: { id: order.id }, data: { paymentProof: fileId, status: 'waiting_confirmation' } })
+      await prisma.order.update({
+        where: { id: order.id },
+        data: { paymentProof: fileId, status: 'waiting_confirmation' }
+      })
 
-      // Konfirmasi ke buyer
       await sendTelegram(chatId,
         `Bukti pembayaran diterima!\n\n` +
         `Order: <code>${order.orderNumber}</code>\n` +
         `Total: <b>Rp${order.totalAmount.toLocaleString('id-ID')}</b>\n\n` +
-        `Penjual sedang mengecek pembayaranmu. Harap tunggu konfirmasi.`
+        `Penjual sedang mengecek pembayaranmu. Harap tunggu konfirmasi ya, <b>${fromFirstName}</b>!`
       )
 
-      // Forward ke penjual dengan tombol konfirmasi
       if (order.store.telegramChatId) {
         const productList = order.orderItems.map(i => `• ${i.product.name} x${i.quantity}`).join('\n')
         const caption =
           `<b>Bukti Pembayaran Masuk!</b>\n\n` +
           `Order: <code>${order.orderNumber}</code>\n` +
-          `Pembeli: @${fromUsername || fromId}\n` +
+          `Pembeli: <b>${fromFirstName}</b> (${fromUsername ? '@'+fromUsername : 'no username'})\n` +
           `Telegram ID: <code>${fromId}</code>\n\n` +
           `<b>Produk:</b>\n${productList}\n\n` +
           `<b>Total: Rp${order.totalAmount.toLocaleString('id-ID')}</b>\n` +
           `Metode: ${order.paymentMethod?.toUpperCase()}\n\n` +
-          `Cek apakah pembayaran sudah masuk, lalu konfirmasi:`
+          `Cek apakah pembayaran sudah masuk:`
 
         const keyboard = {
           inline_keyboard: [[
@@ -145,7 +171,7 @@ export async function POST(request) {
       return NextResponse.json({ ok: true })
     }
 
-    // Pesan teks biasa — cek apakah ada order number di pesan
+    // Cek order number di pesan
     const orderMatch = text.match(/CK\w+/i)
     if (orderMatch) {
       const orderNumber = orderMatch[0].toUpperCase()
@@ -162,7 +188,11 @@ export async function POST(request) {
 
     // Default reply
     await sendTelegram(chatId,
-      `Halo! Kirimkan bukti pembayaran (screenshot) ke sini setelah melakukan pembayaran.\n\n` +
+      `Halo <b>${fromFirstName}</b>!\n\n` +
+      `Kirimkan bukti pembayaran (screenshot) ke sini setelah melakukan pembayaran.\n\n` +
+      `Info akun kamu:\n` +
+      `• ID: <code>${fromId}</code>\n` +
+      `• Username: ${fromUsername ? '@'+fromUsername : 'tidak ada'}\n\n` +
       `Atau kunjungi <b>chuangku.ricossh.cloud</b> untuk belanja.`
     )
 
