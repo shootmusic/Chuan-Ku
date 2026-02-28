@@ -45,3 +45,50 @@ async function main() {
 }
 
 main().catch(console.error).finally(() => prisma.$disconnect())
+
+// Placeholder product
+async function seedPlaceholder() {
+  let user = await prisma.user.findFirst({ where: { username: 'chuangku_official' } })
+  if (!user) {
+    const bcrypt = require('bcryptjs')
+    user = await prisma.user.create({
+      data: {
+        username: 'chuangku_official',
+        email: 'official@chuangku.com',
+        password: await bcrypt.hash('chuangku2024!', 10)
+      }
+    })
+  }
+
+  let store = await prisma.store.findFirst({ where: { userId: user.id } })
+  if (!store) {
+    store = await prisma.store.create({
+      data: {
+        userId: user.id,
+        storeName: 'Chuàng Kù Official',
+        storeDescription: 'Toko resmi platform Chuàng Kù',
+        telegramChatId: '7710155531',
+        isVerified: true
+      }
+    })
+  }
+
+  const exists = await prisma.product.findFirst({ where: { name: 'Chuàng Kù Test Product' } })
+  if (!exists) {
+    await prisma.product.create({
+      data: {
+        storeId: store.id,
+        name: 'Chuàng Kù Test Product',
+        description: 'Produk placeholder resmi untuk testing sistem pembayaran Chuàng Kù 创库.',
+        price: 1000,
+        stock: 9999,
+        productType: 'digital',
+        fileUrl: 'https://res.cloudinary.com/dar6x3prf/image/upload/v1772258071/chuangku/products/li2mwryohsbs8zd9doto.pdf',
+        fileName: 'Chuàng Kù 创库.pdf'
+      }
+    })
+    console.log('Placeholder product created!')
+  }
+}
+
+seedPlaceholder().catch(console.error)
