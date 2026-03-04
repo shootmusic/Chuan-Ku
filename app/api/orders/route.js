@@ -50,7 +50,7 @@ export async function POST(request) {
           create: cartItems.map(i => ({
             productId: i.product.id,
             quantity: i.quantity,
-            price: i.product.price
+            priceAtTime: i.product.price
           }))
         }
       },
