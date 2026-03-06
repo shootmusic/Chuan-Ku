@@ -27,6 +27,11 @@ model Store {
   paymentDetails String?
   telegramChatId String?
   isVerified     Boolean   @default(false)
+  saweriaUrl     String?
+  qrisUrl        String?
+  gopayNumber    String?
+  bankAccount    String?
+  bankName       String?
   createdAt      DateTime  @default(now())
   user           User      @relation(fields: [userId], references: [id])
   products       Product[]
