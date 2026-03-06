@@ -61,6 +61,7 @@ export async function POST(request) {
     try { await prisma.cart.deleteMany({ where: { userId: decoded.id } }) } catch(e) {}
 
     // Kirim pesan ke buyer via Telegram
+    const buyerContact = buyerTelegram || buyerEmail
     if (buyerTelegram) {
       const productList = cartItems.map(i => `• ${i.product.name} x${i.quantity}`).join('\n')
       
@@ -74,8 +75,10 @@ export async function POST(request) {
       } else if (paymentMethod === 'transfer' && store.bankAccount) {
         paymentInfo = `💳 Transfer ke ${store.bankName || 'Bank'}: ${store.bankAccount}`
       } else {
-        paymentInfo = `💳 Metode: ${paymentMethod?.toUpperCase()}\nHubungi penjual untuk info pembayaran`
+        paymentInfo = `💳 Metode: ${paymentMethod?.toUpperCase()}\nHubungi penjual untuk info pembayaran lebih lanjut`
       }
+      // Fallback: pastikan selalu ada info
+      if (!paymentInfo) paymentInfo = `💳 Metode: ${paymentMethod?.toUpperCase()}`
 
       await sendTelegram(buyerTelegram,
         `Halo! Pesanan baru dari <b>Chuàng Kù 创库</b>\n\n` +
