@@ -65,14 +65,16 @@ export async function POST(request) {
       const productList = cartItems.map(i => `• ${i.product.name} x${i.quantity}`).join('\n')
       
       let paymentInfo = ''
-      if (paymentMethod === 'saweria') {
-        paymentInfo = `💳 Bayar via Saweria:\n${process.env.SAWERIA_PAGE_URL || 'https://saweria.co'}`
-      } else if (paymentMethod === 'qris') {
-        paymentInfo = `💳 Bayar via QRIS:\n${process.env.NEXT_PUBLIC_SAWERIA_QR_URL || '-'}`
-      } else if (paymentMethod === 'gopay') {
-        paymentInfo = `💳 Bayar via GoPay ke nomor penjual`
-      } else if (paymentMethod === 'transfer') {
-        paymentInfo = `💳 Bayar via Transfer Bank ke rekening penjual`
+      if (paymentMethod === 'saweria' && store.saweriaUrl) {
+        paymentInfo = `💳 Bayar via Saweria:\n${store.saweriaUrl}`
+      } else if (paymentMethod === 'qris' && store.qrisUrl) {
+        paymentInfo = `💳 Bayar via QRIS:\n${store.qrisUrl}`
+      } else if (paymentMethod === 'gopay' && store.gopayNumber) {
+        paymentInfo = `💳 Bayar via GoPay ke: ${store.gopayNumber}`
+      } else if (paymentMethod === 'transfer' && store.bankAccount) {
+        paymentInfo = `💳 Transfer ke ${store.bankName || 'Bank'}: ${store.bankAccount}`
+      } else {
+        paymentInfo = `💳 Metode: ${paymentMethod?.toUpperCase()}\nHubungi penjual untuk info pembayaran`
       }
 
       await sendTelegram(buyerTelegram,

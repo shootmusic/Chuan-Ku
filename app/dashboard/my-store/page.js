@@ -11,12 +11,27 @@ export default function MyStorePage() {
   const [saving, setSaving] = useState(false)
   const [uploading, setUploading] = useState(false)
   const [tab, setTab] = useState('products')
+  const [payment, setPayment] = useState({ saweriaUrl:'', qrisUrl:'', gopayNumber:'', bankAccount:'', bankName:'' })
+  const [savingPayment, setSavingPayment] = useState(false)
   const [form, setForm] = useState({ name:'', description:'', price:'', stock:'999', productType:'digital', fileUrl:'', fileName:'', filePublicId:'', imageUrl:'' })
   const fileRef = useRef()
   const imageRef = useRef()
 
   useEffect(() => { fetchStore() }, [])
 
+  const savePayment = async () => {
+    const token = localStorage.getItem('token')
+    setSavingPayment(true)
+    try {
+      const res = await fetch('/api/store', {
+        method: 'PUT',
+        headers: {'Content-Type':'application/json','Authorization':`Bearer ${token}`},
+        body: JSON.stringify(payment)
+      })
+      if (res.ok) alert('Info pembayaran disimpan!')
+      else { const d = await res.json(); alert(d.error || 'Gagal') }
+    } catch(e) { alert('Error') } finally { setSavingPayment(false) }
+  }
   const fetchStore = async () => {
     const token = localStorage.getItem('token')
     if (!token) { router.push('/login'); return }
@@ -26,6 +41,13 @@ export default function MyStorePage() {
       if (res.ok && data.store) {
         setStore(data.store)
         setProducts(data.store.products || [])
+        setPayment({
+          saweriaUrl: data.store.saweriaUrl || '',
+          qrisUrl: data.store.qrisUrl || '',
+          gopayNumber: data.store.gopayNumber || '',
+          bankAccount: data.store.bankAccount || '',
+          bankName: data.store.bankName || ''
+        })
       } else {
         router.push('/dashboard/open-store')
       }
@@ -116,7 +138,7 @@ export default function MyStorePage() {
 
       {/* Tabs */}
       <div style={{display:'flex',gap:'8px',marginBottom:'16px'}}>
-        {[{id:'products',label:'Produk'},{id:'orders',label:'Pesanan'}].map(t => (
+        {[{id:'products',label:'Produk'},{id:'orders',label:'Pesanan'},{id:'payment',label:'Pembayaran'}].map(t => (
           <button key={t.id} onClick={() => setTab(t.id)} style={{padding:'8px 20px',borderRadius:'99px',border:'none',cursor:'pointer',fontSize:'13px',fontWeight:'700',background:tab===t.id?'#7c3aed':'rgba(255,255,255,0.06)',color:tab===t.id?'white':'rgba(255,255,255,0.5)'}}>
             {t.label}
           </button>
@@ -227,6 +249,33 @@ export default function MyStorePage() {
             </div>
           )}
         </>
+      )}
+
+      {tab === 'payment' && (
+        <div style={{padding:'16px'}}>
+          <h3 style={{fontSize:'15px',fontWeight:'700',color:'white',marginBottom:'4px'}}>Info Pembayaran Toko</h3>
+          <p style={{fontSize:'12px',color:'rgba(255,255,255,0.4)',marginBottom:'16px'}}>Pembeli akan diarahkan ke info pembayaran ini</p>
+          {[
+            {key:'saweriaUrl', label:'Link Saweria', placeholder:'https://saweria.co/username'},
+            {key:'qrisUrl', label:'URL Gambar QRIS', placeholder:'https://...'},
+            {key:'gopayNumber', label:'Nomor GoPay', placeholder:'08xxxxxxxxxx'},
+            {key:'bankName', label:'Nama Bank', placeholder:'BCA / BRI / Mandiri'},
+            {key:'bankAccount', label:'Nomor Rekening', placeholder:'1234567890'},
+          ].map(f => (
+            <div key={f.key} style={{marginBottom:'14px'}}>
+              <label style={{fontSize:'11px',fontWeight:'700',color:'rgba(255,255,255,0.5)',textTransform:'uppercase',display:'block',marginBottom:'6px'}}>{f.label}</label>
+              <input
+                value={payment[f.key]}
+                onChange={e => setPayment(p => ({...p, [f.key]: e.target.value}))}
+                placeholder={f.placeholder}
+                style={{width:'100%',padding:'10px 12px',borderRadius:'10px',background:'rgba(255,255,255,0.07)',border:'1px solid rgba(255,255,255,0.1)',color:'white',fontSize:'13px',outline:'none',boxSizing:'border-box'}}
+              />
+            </div>
+          ))}
+          <button onClick={savePayment} disabled={savingPayment} style={{width:'100%',padding:'13px',borderRadius:'12px',background:'linear-gradient(135deg,#7c3aed,#5b21b6)',border:'none',cursor:'pointer',color:'white',fontSize:'14px',fontWeight:'700',marginTop:'8px'}}>
+            {savingPayment ? 'Menyimpan...' : 'Simpan Info Pembayaran'}
+          </button>
+        </div>
       )}
 
       {tab === 'orders' && (
