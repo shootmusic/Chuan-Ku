@@ -1,8 +1,6 @@
 'use client'
-
 import { useState, useEffect } from 'react'
 import { useParams, useRouter } from 'next/navigation'
-import { Copy, Check, X } from 'lucide-react'
 
 export default function PaymentPage() {
   const params = useParams()
@@ -25,105 +23,102 @@ export default function PaymentPage() {
     setTimeout(() => setCopied(''), 2000)
   }
 
-  const renderPayment = (method) => {
-    if (method === 'qris') {
-      return (
-        <div className="text-center">
-          <p className="text-sm text-gray-300 mb-4">Scan QR Code pakai e-wallet atau mobile banking</p>
-          <div className="flex justify-center mb-4">
-            <img src="https://saweria.co/widgets/qr?streamKey=83100dfb5ad6f643d7a0776000a0eac6" alt="QRIS" className="w-52 h-52 bg-white p-2 rounded-xl" />
+  const S = {
+    page: {background:'#0f0520',minHeight:'100vh',padding:'20px',display:'flex',alignItems:'flex-start',justifyContent:'center'},
+    card: {width:'100%',maxWidth:'420px',background:'rgba(255,255,255,0.05)',borderRadius:'20px',padding:'24px',border:'1px solid rgba(255,255,255,0.1)'},
+    title: {fontSize:'22px',fontWeight:'900',color:'white',marginBottom:'20px'},
+    orderBox: {background:'rgba(0,0,0,0.3)',borderRadius:'14px',padding:'16px',marginBottom:'20px',textAlign:'center'},
+    label: {fontSize:'11px',color:'rgba(255,255,255,0.4)',marginBottom:'4px'},
+    orderNum: {fontFamily:'monospace',fontWeight:'700',color:'#fbbf24',fontSize:'16px'},
+    total: {fontSize:'28px',fontWeight:'900',color:'white',marginTop:'8px'},
+    section: {marginBottom:'20px'},
+    qrBox: {background:'white',padding:'12px',borderRadius:'16px',display:'inline-block'},
+    infoBox: {background:'rgba(0,0,0,0.3)',borderRadius:'14px',padding:'16px',display:'flex',alignItems:'center',justifyContent:'space-between'},
+    copyBtn: {background:'#7c3aed',border:'none',borderRadius:'8px',padding:'8px 14px',color:'white',fontSize:'13px',fontWeight:'700',cursor:'pointer'},
+    noteBox: {background:'rgba(234,179,8,0.15)',border:'1px solid rgba(234,179,8,0.3)',borderRadius:'14px',padding:'16px',marginBottom:'20px'},
+    noteText: {fontSize:'13px',color:'#fcd34d',lineHeight:'1.6',margin:0},
+    backBtn: {width:'100%',padding:'14px',borderRadius:'12px',background:'linear-gradient(135deg,#7c3aed,#5b21b6)',border:'none',cursor:'pointer',color:'white',fontSize:'15px',fontWeight:'700'},
+  }
+
+  const renderPayment = () => {
+    if (paymentMethod === 'qris') return (
+      <div style={{textAlign:'center'}}>
+        <p style={{fontSize:'13px',color:'rgba(255,255,255,0.6)',marginBottom:'16px'}}>Scan QR Code pakai e-wallet atau mobile banking</p>
+        <div style={{display:'flex',justifyContent:'center',marginBottom:'12px'}}>
+          <div style={S.qrBox}>
+            <img src={process.env.NEXT_PUBLIC_SAWERIA_QR_URL || "https://saweria.co/widgets/qr?streamKey=83100dfb5ad6f643d7a0776000a0eac6"} alt="QRIS" style={{width:'200px',height:'200px',display:'block'}} onError={e=>e.target.style.display='none'}/>
           </div>
         </div>
-      )
-    }
-    if (method === 'saweria') {
-      return (
-        <div className="text-center">
-          <p className="text-sm text-gray-300 mb-4">Klik tombol untuk bayar via Saweria</p>
-          <a href="https://saweria.co/Kikomaukiko" target="_blank" rel="noopener noreferrer" className="btn-primary px-8 py-3 inline-block">Buka Saweria</a>
-        </div>
-      )
-    }
-    if (method === 'gopay') {
-      return (
-        <div>
-          <p className="text-sm text-gray-300 mb-3">Transfer ke nomor GoPay:</p>
-          <div className="flex items-center justify-between bg-black/30 p-4 rounded-xl">
-            <div>
-              <p className="text-xs text-gray-400">GoPay</p>
-              <p className="font-mono font-bold text-lg">081234567890</p>
-              <p className="text-xs text-gray-400">a.n Chuanku</p>
-            </div>
-            <button onClick={() => copy('081234567890', 'gopay')} className="bg-purple-600 hover:bg-purple-700 px-3 py-1 rounded text-sm">
-              {copied === 'gopay' ? 'Copied!' : 'Copy'}
-            </button>
+        <p style={{fontSize:'12px',color:'rgba(255,255,255,0.4)'}}>Total: <b style={{color:'white'}}>Rp{order?.total?.toLocaleString('id-ID') || '-'}</b></p>
+      </div>
+    )
+
+    if (paymentMethod === 'saweria') return (
+      <div style={{textAlign:'center'}}>
+        <p style={{fontSize:'13px',color:'rgba(255,255,255,0.6)',marginBottom:'16px'}}>Klik tombol untuk bayar via Saweria</p>
+        <a href={process.env.NEXT_PUBLIC_SAWERIA_PAGE_URL || "https://saweria.co"} target="_blank" rel="noopener noreferrer"
+          style={{display:'inline-block',padding:'12px 32px',background:'linear-gradient(135deg,#7c3aed,#5b21b6)',borderRadius:'12px',color:'white',fontWeight:'700',fontSize:'15px',textDecoration:'none'}}>
+          Buka Saweria 💸
+        </a>
+      </div>
+    )
+
+    if (paymentMethod === 'gopay') return (
+      <div>
+        <p style={{fontSize:'13px',color:'rgba(255,255,255,0.6)',marginBottom:'12px'}}>Transfer ke nomor GoPay:</p>
+        <div style={S.infoBox}>
+          <div>
+            <p style={{fontSize:'11px',color:'rgba(255,255,255,0.4)',margin:'0 0 2px'}}>GoPay</p>
+            <p style={{fontFamily:'monospace',fontWeight:'700',fontSize:'18px',color:'white',margin:'0 0 2px'}}>081234567890</p>
+            <p style={{fontSize:'11px',color:'rgba(255,255,255,0.4)',margin:0}}>a.n Chuanku</p>
           </div>
+          <button onClick={() => copy('081234567890','gopay')} style={S.copyBtn}>{copied==='gopay'?'✓ Copied!':'Copy'}</button>
         </div>
-      )
-    }
-    if (method === 'bank') {
-      return (
-        <div>
-          <p className="text-sm text-gray-300 mb-3">Transfer ke rekening:</p>
-          <div className="flex items-center justify-between bg-black/30 p-4 rounded-xl">
-            <div>
-              <p className="text-xs text-gray-400">BCA</p>
-              <p className="font-mono font-bold text-lg">1234567890</p>
-              <p className="text-xs text-gray-400">a.n Chuanku</p>
-            </div>
-            <button onClick={() => copy('1234567890', 'bank')} className="bg-purple-600 hover:bg-purple-700 px-3 py-1 rounded text-sm">
-              {copied === 'bank' ? 'Copied!' : 'Copy'}
-            </button>
+      </div>
+    )
+
+    if (paymentMethod === 'transfer') return (
+      <div>
+        <p style={{fontSize:'13px',color:'rgba(255,255,255,0.6)',marginBottom:'12px'}}>Transfer ke rekening:</p>
+        <div style={S.infoBox}>
+          <div>
+            <p style={{fontSize:'11px',color:'rgba(255,255,255,0.4)',margin:'0 0 2px'}}>BCA</p>
+            <p style={{fontFamily:'monospace',fontWeight:'700',fontSize:'18px',color:'white',margin:'0 0 2px'}}>1234567890</p>
+            <p style={{fontSize:'11px',color:'rgba(255,255,255,0.4)',margin:0}}>a.n Chuanku</p>
           </div>
+          <button onClick={() => copy('1234567890','bank')} style={S.copyBtn}>{copied==='bank'?'✓ Copied!':'Copy'}</button>
         </div>
-      )
-    }
-    if (method === 'va') {
-      return (
-        <div>
-          <p className="text-sm text-gray-300 mb-3">Bayar via Virtual Account:</p>
-          <div className="flex items-center justify-between bg-black/30 p-4 rounded-xl">
-            <div>
-              <p className="text-xs text-gray-400">Virtual Account BCA</p>
-              <p className="font-mono font-bold text-lg">9881234567890</p>
-            </div>
-            <button onClick={() => copy('9881234567890', 'va')} className="bg-purple-600 hover:bg-purple-700 px-3 py-1 rounded text-sm">
-              {copied === 'va' ? 'Copied!' : 'Copy'}
-            </button>
-          </div>
-        </div>
-      )
-    }
+      </div>
+    )
     return null
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4">
-      <div className="w-full max-w-md">
-        <div className="card">
-          <div className="flex justify-between items-center mb-6">
-            <h1 className="text-xl font-bold">Pembayaran</h1>
-            <button onClick={() => router.push('/dashboard/dashboard')} className="p-1 hover:bg-white/20 rounded">
-              <X size={20} />
-            </button>
-          </div>
-          <div className="bg-black/30 rounded-xl p-4 mb-6 text-center">
-            <p className="text-xs text-gray-400 mb-1">Order Number</p>
-            <p className="font-mono font-bold text-yellow-300 text-lg">{orderNumber}</p>
-            {order && (
-              <p className="text-2xl font-bold mt-2">Rp{order.total?.toLocaleString('id-ID')}</p>
-            )}
-          </div>
-          <div className="mb-6">
-            {renderPayment(paymentMethod)}
-          </div>
-          <div className="bg-yellow-600/20 border border-yellow-500/50 rounded-xl p-4 mb-6">
-            <p className="text-sm text-yellow-200">Setelah bayar, screenshot bukti dan kirim ke @Chuangkubot di Telegram</p>
-          </div>
-          <button onClick={() => router.push('/dashboard/dashboard')} className="w-full btn-outline py-3">
-            Kembali ke Dashboard
-          </button>
+    <div style={S.page}>
+      <div style={S.card}>
+        <h1 style={S.title}>💳 Pembayaran</h1>
+
+        <div style={S.orderBox}>
+          <p style={S.label}>Order Number</p>
+          <p style={S.orderNum}>{orderNumber}</p>
+          {order && <p style={S.total}>Rp{order.total?.toLocaleString('id-ID')}</p>}
         </div>
+
+        <div style={S.section}>
+          {renderPayment()}
+        </div>
+
+        <div style={S.noteBox}>
+          <p style={S.noteText}>
+            📸 Setelah bayar, screenshot bukti pembayaran dan kirim ke bot Telegram:<br/>
+            <b>@Chuangkubot</b><br/><br/>
+            Bot akan otomatis memproses pesananmu!
+          </p>
+        </div>
+
+        <button onClick={() => router.push('/dashboard/dashboard')} style={S.backBtn}>
+          Kembali ke Dashboard
+        </button>
       </div>
     </div>
   )

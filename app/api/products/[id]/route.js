@@ -28,3 +28,36 @@ export async function DELETE(request, { params }) {
     return NextResponse.json({ error: error.message }, { status: 500 })
   }
 }
+
+export async function PATCH(request, { params }) {
+  try {
+    const token = request.headers.get('authorization')?.replace('Bearer ', '')
+    const { verifyToken } = await import('@/lib/auth')
+    const decoded = verifyToken(token)
+    if (!decoded) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    const data = await request.json()
+    const product = await prisma.product.update({
+      where: { id: parseInt(params.id) },
+      data
+    })
+    return NextResponse.json({ product })
+  } catch (error) {
+    return NextResponse.json({ error: error.message }, { status: 500 })
+  }
+}
+
+export async function PATCH(request, { params }) {
+  try {
+    const token = request.headers.get('authorization')?.replace('Bearer ', '')
+    const decoded = verifyToken(token)
+    if (!decoded) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    const data = await request.json()
+    const product = await prisma.product.update({
+      where: { id: parseInt(params.id) },
+      data
+    })
+    return NextResponse.json({ product })
+  } catch (error) {
+    return NextResponse.json({ error: error.message }, { status: 500 })
+  }
+}

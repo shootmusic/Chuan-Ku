@@ -63,13 +63,25 @@ export async function POST(request) {
     // Kirim pesan ke buyer via Telegram
     if (buyerTelegram) {
       const productList = cartItems.map(i => `• ${i.product.name} x${i.quantity}`).join('\n')
+      
+      let paymentInfo = ''
+      if (paymentMethod === 'saweria') {
+        paymentInfo = `💳 Bayar via Saweria:\n${process.env.SAWERIA_PAGE_URL || 'https://saweria.co'}`
+      } else if (paymentMethod === 'qris') {
+        paymentInfo = `💳 Bayar via QRIS:\n${process.env.NEXT_PUBLIC_SAWERIA_QR_URL || '-'}`
+      } else if (paymentMethod === 'gopay') {
+        paymentInfo = `💳 Bayar via GoPay ke nomor penjual`
+      } else if (paymentMethod === 'transfer') {
+        paymentInfo = `💳 Bayar via Transfer Bank ke rekening penjual`
+      }
+
       await sendTelegram(buyerTelegram,
-        `Halo! Pesanan baru dari <b>Chuàng Kù</b>\n\n` +
-        `Order ID: <code>${orderNumber}</code>\n\n` +
+        `Halo! Pesanan baru dari <b>Chuàng Kù 创库</b>\n\n` +
+        `🧾 Order ID: <code>${orderNumber}</code>\n\n` +
         `<b>Produk:</b>\n${productList}\n\n` +
-        `<b>Total: Rp${totalAmount.toLocaleString('id-ID')}</b>\n` +
-        `Pembayaran via: <b>${paymentMethod?.toUpperCase()}</b>\n\n` +
-        `Jika sudah membayar, kirim screenshot bukti pembayaran ke bot ini ya!`
+        `💰 <b>Total: Rp${totalAmount.toLocaleString('id-ID')}</b>\n\n` +
+        `${paymentInfo}\n\n` +
+        `Setelah bayar, kirim screenshot bukti pembayaran ke bot ini ya! 📸`
       )
     }
 
